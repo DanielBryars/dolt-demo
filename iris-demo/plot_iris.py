@@ -49,6 +49,14 @@ def fetch_iris(cur, ref):
                   "FROM iris AS OF %s", (ref,))
 
 
+def expand(lim, values, pad=0.3):
+    """The fixed limit, grown just enough to include any out-of-range data.
+    Never shrinks below the fixed range, so ordinary revisions stay stable."""
+    if not values:
+        return lim
+    return (min(lim[0], min(values) - pad), max(lim[1], max(values) + pad))
+
+
 def draw(fig, sepal_ax, petal_ax, rows, title):
     for ax in (sepal_ax, petal_ax):
         ax.clear()
@@ -61,9 +69,10 @@ def draw(fig, sepal_ax, petal_ax, rows, title):
                          c=color, label=f"{sp} ({len(pts)})", alpha=0.7, edgecolors="none")
         petal_ax.scatter([p[2] for p in pts], [p[3] for p in pts],
                          c=color, alpha=0.7, edgecolors="none")
-    sepal_ax.set(xlim=SEPAL_XLIM, ylim=SEPAL_YLIM,
+    cols = list(zip(*((p for pts in by_species.values() for p in pts)))) or [[], [], [], []]
+    sepal_ax.set(xlim=expand(SEPAL_XLIM, cols[0]), ylim=expand(SEPAL_YLIM, cols[1]),
                  xlabel="sepal_length", ylabel="sepal_width", title="Sepals")
-    petal_ax.set(xlim=PETAL_XLIM, ylim=PETAL_YLIM,
+    petal_ax.set(xlim=expand(PETAL_XLIM, cols[2]), ylim=expand(PETAL_YLIM, cols[3]),
                  xlabel="petal_length", ylabel="petal_width", title="Petals")
     sepal_ax.legend(loc="upper right", fontsize=8)
     fig.suptitle(f"iris @ {title}   —   {len(rows)} rows", fontsize=12)
