@@ -1,0 +1,11 @@
+# Testing only — lets the demo run alongside iris-stack, which already holds
+# 3306/3000/9002 on the host. Not part of what you hand to anyone.
+#   docker compose -f docker-compose.yml -f test-override.yml up -d
+services:
+  dolt:
+    ports: !override
+      - "3307:3306"
+  workbench:
+    ports: !override
+      - "3010:3000"
+      - "9012:9002"
