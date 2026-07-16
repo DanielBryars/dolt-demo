@@ -80,16 +80,15 @@ def draw(fig, sepal_ax, petal_ax, rows, title):
 
 
 def run_interactive(cur, fig, sepal_ax, petal_ax):
-    from matplotlib.widgets import RadioButtons
+    from matplotlib.widgets import Button, RadioButtons
     import matplotlib.pyplot as plt
 
-    ref_ax = fig.add_axes([0.015, 0.62, 0.24, 0.30])
-    ref_ax.set_title("branch / tag", fontsize=9, loc="left")
-    commit_ax = fig.add_axes([0.015, 0.06, 0.24, 0.50])
-    commit_ax.set_title("commit", fontsize=9, loc="left")
+    button_ax = fig.add_axes([0.015, 0.935, 0.10, 0.05])
+    ref_ax = fig.add_axes([0.015, 0.60, 0.24, 0.30])
+    commit_ax = fig.add_axes([0.015, 0.06, 0.24, 0.48])
 
-    refs = fetch_refs(cur)
-    state = {"commits": [], "commit_radio": None, "rebuilding": False}
+    state = {"refs": [], "commits": [], "ref_label": None,
+             "ref_radio": None, "commit_radio": None, "rebuilding": False}
 
     def shrink(radio, size):
         for t in radio.labels:
@@ -102,10 +101,12 @@ def run_interactive(cur, fig, sepal_ax, petal_ax):
         draw(fig, sepal_ax, petal_ax, fetch_iris(cur, h), label)
 
     def on_ref(label):
-        ref = dict(refs)[label]
+        if state["rebuilding"]:
+            return
+        state["ref_label"] = label
+        ref = dict(state["refs"])[label]
         state["commits"] = fetch_commits(cur, ref)
-        # RadioButtons can't relabel in place; rebuild the widget. The guard
-        # stops set_active(0) inside the constructor from double-drawing.
+        # RadioButtons can't relabel in place; rebuild the widget.
         state["rebuilding"] = True
         commit_ax.clear()
         commit_ax.set_title("commit", fontsize=9, loc="left")
@@ -116,11 +117,29 @@ def run_interactive(cur, fig, sepal_ax, petal_ax):
         # Draw the ref itself (its HEAD), which the first radio entry equals.
         draw(fig, sepal_ax, petal_ax, fetch_iris(cur, ref), label)
 
-    ref_radio = RadioButtons(ref_ax, [r[0] for r in refs])
-    shrink(ref_radio, 8)
-    ref_radio.on_clicked(on_ref)
-    on_ref(refs[0][0])
+    def refresh(_event=None):
+        """Re-query branches/tags and commits — picks up work done since the
+        window opened. Keeps the current selection when it still exists."""
+        state["refs"] = fetch_refs(cur)
+        labels = [r[0] for r in state["refs"]]
+        keep = state["ref_label"] if state["ref_label"] in labels else labels[0]
+        state["rebuilding"] = True
+        ref_ax.clear()
+        ref_ax.set_title("branch / tag", fontsize=9, loc="left")
+        state["ref_radio"] = RadioButtons(ref_ax, labels, active=labels.index(keep))
+        shrink(state["ref_radio"], 8)
+        state["ref_radio"].on_clicked(on_ref)
+        state["rebuilding"] = False
+        on_ref(keep)
+
+    button = Button(button_ax, "refresh")
+    button.label.set_fontsize(9)
+    button.on_clicked(refresh)
+    refresh()
+    state["refresh"] = refresh  # kept for tests; widgets stay alive via state
+    state["button"] = button
     plt.show()
+    return state
 
 
 def main():
