@@ -1,0 +1,3 @@
+# iris.csv is COPY'd into a Linux image and imported by dolt; CRLF would
+# corrupt the last column. Keep it LF regardless of core.autocrlf.
+iris.csv text eol=lf

@@ -1,7 +1,7 @@
 # Dolt demo — a version-controlled Iris dataset
 
-`docker-compose.yml` is the whole thing. One file, ~18KB, nothing else to
-download. Send it to someone and they run:
+Two files: `docker-compose.yml` and `iris.csv`. Zip them up, send them to
+someone, and they run:
 
 ```bash
 docker compose up -d          # first run seeds itself (~40s)
@@ -42,12 +42,14 @@ The key point for the audience: the `demo` container has **no dolt binary and
 no copy of the data**. Everything is plain SQL over TCP. Nobody clones a 10GB
 dataset to ask what changed.
 
-## Regenerating
+## Editing
 
-`docker-compose.yml` is generated. Edit `build-demo.sh` and re-run it:
+`docker-compose.yml` is the source — edit it directly. The dataset lives in
+`iris.csv`; the seed and tour scripts are inline in the compose file. Compose
+interpolates those inline scripts, so literal shell `$` must be written `$$`.
+After any change:
 
 ```bash
-./build-demo.sh
 docker compose up -d --build     # --build is REQUIRED, see below
 ```
 
