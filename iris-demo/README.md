@@ -42,6 +42,24 @@ The key point for the audience: the `demo` container has **no dolt binary and
 no copy of the data**. Everything is plain SQL over TCP. Nobody clones a 10GB
 dataset to ask what changed.
 
+## Plotting branches and revisions
+
+`make_history.py` builds a small branch-and-merge story on top of the seeded
+history (a setosa unit-fix branch that gets merged into main, and an unmerged
+branch with virginica deleted). `plot_iris.py` scatter-plots the `iris` table
+at any branch, tag, or commit — pick a ref in the left panel and watch the
+clusters move. Both talk plain MySQL to the running stack.
+
+```bash
+pip install -r requirements.txt
+python make_history.py           # idempotent — rerun any time
+python plot_iris.py              # interactive branch/commit picker
+python plot_iris.py --ref drop-virginica --save plot.png   # headless snapshot
+```
+
+Both scripts take `--port 3307` when running alongside iris-stack. Axis
+limits are fixed on purpose, so edits move the points rather than the axes.
+
 ## Editing
 
 `docker-compose.yml` is the source — edit it directly. The dataset lives in
