@@ -1,1 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
 .venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Editors / OS
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
+
+# Demo output
+*.png
